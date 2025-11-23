@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Preview</title>
+
+  <!-- Dein eingebetteter Font für die Vorschau -->
+  <style>
+    @font-face {
+      font-family: "MyFont";
+      src: url("dein-font.otf") format("opentype");
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a1a, #333);
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    #output {
+      margin-top: 30px;
+      padding: 25px;
+      min-height: 100px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      font-family: "MyFont";
+      font-size: 36px;
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <!-- pdf-lib & fontkit (kann OTF einbetten!) -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Dein Font Vorschau Tool</h1>
+
+    <textarea
+      id="textInput"
+      class="input-box"
+      placeholder="Gib hier deinen Text ein..."
+      rows="5"
+    ></textarea>
+
+    <div id="output"></div>
+
+    <button id="downloadBtn" style="margin-top:20px; padding:12px 20px; font-size:18px; border:none; border-radius:10px; cursor:pointer; background:#4caf50; color:white;">
+      Als PDF herunterladen
+    </button>
+  </div>
+
+  <script>
+    // Vorschau aktualisieren
+    document.getElementById("textInput").addEventListener("input", function () {
+      document.getElementById("output").textContent = this.value;
+    });
+
+    // PDF Download mit pdf-lib + fontkit
+    document.getElementById("downloadBtn").addEventListener("click", async () => {
+      const text = document.getElementById("textInput").value;
+
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+
+      // Deinen Font laden
+      const fontBytes = await fetch("dein-font.otf").then(r => r.arrayBuffer());
+      const customFont = await pdfDoc.embedFont(fontBytes);
+
+      // A4 Page
+      const page = pdfDoc.addPage([595, 842]);
+
+      const fontSize = 28;
+      const lineHeight = 32;
+      const margin = 40;
+      let x = margin;
+      let y = 842 - margin;
+
+      // Text in Zeilen umbrechen
+      const maxWidth = 595 - margin * 2;
+      const words = text.split(" ");
+      let line = "";
+
+      for (let word of words) {
+        const testLine = line + word + " ";
+        const width = customFont.widthOfTextAtSize(testLine, fontSize);
+
+        if (width > maxWidth) {
+          page.drawText(line, { x, y, size: fontSize, font: customFont });
+          line = word + " ";
+          y -= lineHeight;
+
+          if (y < margin) {
+            y = 842 - margin;
+            pdfDoc.addPage(); // neue Seite
+          }
+        } else {
+          line = testLine;
+        }
+      }
+
+      // letzte Zeile zeichnen
+      page.drawText(line, { x, y, size: fontSize, font: customFont });
+
+      // PDF speichern
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "dein_text.pdf";
+      link.click();
+    });
+  </script>
+</body>
+</html>
