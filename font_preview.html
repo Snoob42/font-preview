@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Preview</title>
+
+  <style>
+    @font-face {
+      font-family: "MyFont";
+      src: url("dein-font.otf") format("opentype");
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a1a, #333);
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    #output {
+      margin-top: 30px;
+      padding: 25px;
+      min-height: 100px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      font-family: "MyFont";
+      font-size: 36px;
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Dein Font Vorschau Tool</h1>
+
+    <input
+      type="text"
+      id="textInput"
+      class="input-box"
+      placeholder="Gib hier deinen Text ein..."
+    />
+
+    <div id="output"></div>
+
+    <button id="downloadBtn" style="margin-top:20px; padding:12px 20px; font-size:18px; border:none; border-radius:10px; cursor:pointer; background:#4caf50; color:white;">Als PDF herunterladen</button>
+  </div>
+
+  <script>
+    document.getElementById("textInput").addEventListener("input", function () {
+      document.getElementById("output").textContent = this.value;
+    });
+
+    // PDF Download
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.addFont("dein-font.otf", "MyFont", "normal");
+      doc.setFont("MyFont");
+      doc.setFontSize(32);
+      const text = document.getElementById("output").textContent;
+      doc.text(text, 10, 20);
+      doc.save("text.pdf");
+    });
+  </script>
+</body>
+</html>
